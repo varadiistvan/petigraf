@@ -1,10 +1,4 @@
-import math, pygame, sys, gym, torch
-
-import torch.nn as nn
-import torch.optim as optim
-
-device = torch.device("cpu")
-
+import math, pygame, sys
 
 
 WIDTH = 500
