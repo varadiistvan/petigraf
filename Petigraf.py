@@ -360,11 +360,4 @@ for episode in tqdm(range(1, EPISODES+1), ascii=True, unit="episodes"):
         agent.model.save(f'models/{MODEL_NAME}1__{max_reward:_>7.2f}max_{avg_reward:_>7.2f}avg_{min_reward:_>7.2f}min__{int(time.time())}.model')
 
 
-    epsilon *= epsilonDecay
-
-
-    
-
-
-
-    
+    epsilon *= epsilonDecay    
