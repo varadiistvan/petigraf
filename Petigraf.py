@@ -1,4 +1,5 @@
 import math
+from typing import Set
 import pygame
 import sys
 from re import L
@@ -19,7 +20,6 @@ import os
 # The game
 
 done = 0
-
 
 class Environment ():
 
@@ -48,19 +48,17 @@ class Environment ():
 
         self.turn = 1
         self.chosen = ""
-        self.missing = []
         self.space = []
 
         for i in range(len(self.vertices)-1):
           self.space.append([])
           for j in range(len(self.vertices)-i-1):
-            self.space[i].append(np.random.choice(3, 1)[0])
-
-        print(self.space)
-        print(self.isDone())
+            self.space[i].append(0)
+        
+        self.randomAgent = RandomAgent(np.random.choice(2)*2-1)
         
     
-    def isDone(self, space = None):
+    def isDone(self=None, space = None):
       if(space == None):
         space = self.space
 
@@ -77,11 +75,17 @@ class Environment ():
       pass
 
     def drawLine(self, start, end):
-      pass
+      if(self.space[start][end] != 0):
+        pass
+      self.space[start][end] = self.turn
+      if(self.isDone()):
+        done = self.turn
+        self.gameover()
+      self.turn = -self.turn
 
     def action(self, choice):
         start = round(0.0169*choice**2+0.0386*choice-0.0794) #excel
-        end = round(0.5*start**2+0.0386*start)
+        end = choice-round(0.5*start**2+0.0386*start)
         self.drawLine(start, end)
 
     # Pygame-related code
@@ -110,26 +114,26 @@ class Environment ():
         run = True
         while run:
             clock.tick(self.FPS)
+            if(self.turn == self.randomAgent.turn):
+              choice = self.randomAgent.makeChoice(self.space)
+              self.drawLine(choice[0], choice[1])
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     run = False
                 elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     for vertex in self.vertices:
                         if event.pos[0] > vertex["pos"][0] - 20 and event.pos[0] < vertex["pos"][0] + 20 and event.pos[1] > vertex["pos"][1] - 20 and event.pos[1] < vertex["pos"][1] + 20:
-                          
                             if type(self.chosen) == str:
                                 self.chosen = vertex
                                 vertex["color"] = self.turns[self.turn]
                             else:
-                                print(vertex["key"], self.chosen["key"])
                                 if vertex["color"] != self.BLACK:
                                     self.chosen = ""
                                     vertex["color"] = self.BLACK
-                                elif self.space[min(self.chosen["key"], vertex["key"]-1)][max(self.chosen["key"], vertex["key"])-min(self.chosen["key"], vertex["key"]-1)] != 0:
+                                elif self.space[min(self.chosen["key"], vertex["key"])][max(self.chosen["key"], vertex["key"])-min(self.chosen["key"], vertex["key"])-1] != 0:
                                     pass
                                 else:
-                                    self.drawLine(min(vertex["key"], self.chosen["key"])-1, max(
-                                        vertex["key"], self.chosen["key"])-1)
+                                    self.drawLine(min(self.chosen["key"], vertex["key"]), max(self.chosen["key"], vertex["key"])-min(self.chosen["key"], vertex["key"])-1)
                                     vertex["color"] = self.BLACK
                                     self.vertices[self.chosen["key"]
                                                   ]["color"] = self.BLACK
@@ -139,6 +143,33 @@ class Environment ():
 
         pygame.quit()
         sys.exit()
+
+
+class RandomAgent():
+  def __init__(self, turn) -> None:
+      self.turn = turn
+      pass
+  
+  def makeChoice(self, space):
+    choice = None
+    
+    safe = []
+
+    for i in range(len(space)):
+      for j in range(len(space[i])):
+        if(space[i][j] == 0):
+          space[i][j] = self.turn
+          if(Environment.isDone(space=space) == 0):
+            safe.append((i, j))
+          space[i][j] = 0
+
+    if(len(safe) == 0):
+      for i in range(len(space)):
+        for j in range(len(space[i])):
+          if(space[i][j] == 0):
+            return (i, j)
+          
+    return safe[np.random.choice(len(safe))]
 
 
 game = Environment()
